@@ -37,16 +37,16 @@
     button.onclick = function() {
     //   canvas.width = video.videoWidth;
     //   canvas.height = video.videoHeight;
-      canvas.width = 148;
-      canvas.height = 184;
+      canvas.width = 230;
+      canvas.height = 250;
       canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
     };
     
     const constraints = {
       audio: false,
       video: {
-        width: 148,
-        height: 184,
+        width: 1280,
+        height: 720,
         facingMode: "environment"
       }
     };
