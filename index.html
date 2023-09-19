@@ -37,8 +37,8 @@
     button.onclick = function() {
     //   canvas.width = video.videoWidth;
     //   canvas.height = video.videoHeight;
-      canvas.width = 230;
-      canvas.height = 250;
+      canvas.width = 500;
+      canvas.height = 500;
       canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
     };
     
@@ -47,7 +47,8 @@
       video: {
         width: 1280,
         height: 720,
-        facingMode: "environment"
+        facingMode: "environment",
+        focusDistance: 10
       }
     };
     
