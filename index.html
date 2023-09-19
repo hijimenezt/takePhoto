@@ -18,7 +18,8 @@
 <body>
 <div id="container">
     <h1><a href="//webrtc.github.io/samples/" title="WebRTC samples homepage">WebRTC samples</a> <span>getUserMedia ⇒ canvas</span></h1>
-    <video playsinline autoplay style="width: 500px; height: 250px;border:1px solid red;"></video>
+    <video playsinline autoplay ></video>
+<!--     style="width: 500px; height: 250px;border:1px solid red;" -->
     <button>Take snapshot</button>
     <canvas></canvas>
 </div>
@@ -37,8 +38,9 @@
     button.onclick = function() {
     //   canvas.width = video.videoWidth;
     //   canvas.height = video.videoHeight;
-      canvas.width = 1280;
-      canvas.height = 720;
+      // canvas.width = 1280;
+      // canvas.height = 720;
+        // , canvas.width, canvas.height
       canvas.getContext('2d').drawImage(video, 0, 0);
     };
     
@@ -47,8 +49,8 @@
       video: {
         width: 1280,
         height: 720,
-        facingMode: "environment",
-        focusDistance: 10
+        facingMode: "environment"
+        // focusDistance: 10
       }
     };
     
