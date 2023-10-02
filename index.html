@@ -1,57 +1,81 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <meta charset="utf-8">
-    <meta name="description" content="WebRTC code samples">
-    <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1, maximum-scale=1">
-    <meta itemprop="description" content="Client-side WebRTC code samples">
-    <meta itemprop="image" content="../../../images/webrtc-icon-192x192.png">
-    <meta itemprop="name" content="WebRTC code samples">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta id="theme-color" name="theme-color" content="#ffffff">
-    <base target="_blank">
-    <title>getUserMedia to canvas</title>
-    <link rel="icon" sizes="192x192" href="../../../images/webrtc-icon-192x192.png">
-    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700" rel="stylesheet" type="text/css">
-    <link rel="stylesheet" href="../../../css/main.css">
+  <meta charset="utf-8">
+  <meta name="description" content="WebRTC code samples">
+  <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1, maximum-scale=1">
+  <meta itemprop="description" content="Client-side WebRTC code samples">
+  <meta itemprop="image" content="../../../images/webrtc-icon-192x192.png">
+  <meta itemprop="name" content="WebRTC code samples">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta id="theme-color" name="theme-color" content="#ffffff">
+  <base target="_blank">
+  <title>getUserMedia to canvas</title>
+  <link rel="icon" sizes="192x192" href="../../../images/webrtc-icon-192x192.png">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="../../../css/main.css">
 </head>
+
 <body>
-<div id="container">
-    <h1><a href="//webrtc.github.io/samples/" title="WebRTC samples homepage">WebRTC samples</a> <span>getUserMedia ⇒ canvas</span></h1>
-    <video playsinline autoplay style="width: 500px; height: 300px;border:1px solid red;" ></video>    
+  <div id="container">
+    <h1><a href="//webrtc.github.io/samples/" title="WebRTC samples homepage">WebRTC samples</a> <span>getUserMedia ⇒
+        canvas</span></h1>
+    <video playsinline autoplay style="width: 500px; height: 300px;border:1px solid red;"></video>
     <button>Take snapshot</button>
     <br>
-<!--     <canvas style="position:absolute;border:0px solid;"></canvas> -->
-<!--      width="1200" height="600" -->
-    <canvas width="1200" height="600" style="position:absolute;border:0px solid;"></canvas>
-    <br>  
-    <canvas id="canvas2" width="500" height="600" style="position:absolute;border:1px solid green;"></canvas>
-</div>
+    <!--     <canvas style="position:absolute;border:0px solid;"></canvas> -->
+    <!--      width="1200" height="600" -->
+    <!-- <canvas width="1200" height="600" style="position:absolute;border:0px solid;"></canvas> -->
 
-<!-- <script src="js/main.js" async></script> -->
-<script async>
+    <canvas id="lienzo" width="900" height="600"></canvas>
+  </div>
+
+  <!-- <script src="js/main.js" async></script> -->
+  <script async>
     'use strict';
 
     // Put variables in global scope to make them available to the browser console.
     const video = document.querySelector('video');
-    const canvas = window.canvas = document.querySelector('canvas');
-    const canvas2 = window.canvas = document.getElementById('canvas2');
-    canvas.width = 230;
-    canvas.height = 250;
-    
+    // const canvas = window.canvas = document.querySelector('canvas');
+    // const canvas2 = window.canvas = document.getElementById('canvas2');
+    // canvas.width = 230;
+    // canvas.height = 250;
+
+    var cv = document.getElementById('lienzo');
+    var ctx = cv.getContext('2d');
+    var image = new Image();
+    var foto = {x: 50, y: 50, w: 100, h: 100};
+    var isUp = null;
+
+
     const button = document.querySelector('button');
-    button.onclick = function() {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      // canvas.width = 1280;
-      // canvas.height = 720;
-        // canvas.width = 230;
-        // canvas.height = 250;
-        // , canvas.width, canvas.height
-      canvas.getContext('2d').drawImage(video, 0, 0);
-        canvas2.getContext('2d').drawImage(video, 0, 0);
+    button.onclick = function () {
+      drawImage(video, 1200, 600);
     };
-    
+
+    function drawImage(image, w, h) {
+        ctx.drawImage(image, foto.x, foto.y, w, h);
+
+        ctx.fillStyle = 'white';
+
+        ctx.beginPath();
+        ctx.arc(foto.x, foto.y, 5, 0, Math.PI * 2, 1);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(w + foto.x, h / 2 + foto.y, 5, 0, Math.PI * 2, 1);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(w / 2 + foto.x, h + foto.y, 5, 0, Math.PI * 2, 1);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(w + foto.x, h + foto.y, 5, 0, Math.PI * 2, 1);
+        ctx.fill();
+    }
+
     const constraints = {
       audio: false,
       video: {
@@ -61,18 +85,19 @@
         // focusDistance: 10
       }
     };
-    
+
     function handleSuccess(stream) {
       window.stream = stream; // make stream available to browser console
       video.srcObject = stream;
     }
-    
+
     function handleError(error) {
       console.log('navigator.MediaDevices.getUserMedia error: ', error.message, error.name);
     }
-    
+
     navigator.mediaDevices.getUserMedia(constraints).then(handleSuccess).catch(handleError);
-</script>
+  </script>
 
 </body>
+
 </html>
