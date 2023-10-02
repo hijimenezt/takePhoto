@@ -17,110 +17,64 @@
 </head>
 <body>
 <div id="container">
-  <span class="error"></span>
-  <br>
-  <label for="interval">Time between images in seconds: </label>
-  <input id="interval" type="text" value="1" min="1" pattern="\d+">
-  <br>
-  <button id="start">Start</button>
-  <br>
-  <label for="hideVid">Hide video element: </label>
-  <input id="hideVid" type="checkbox">
-  <br>
-  <p>Camera Settings</p>
-  <span id="settings"></span>
-  <p>Camera capabilities</p>
-  <span id="caps"></span>
-  <br>
-  <video autoplay muted playsinline></video>
-  <p>
-    Images captured: <span id="image_count">0</span>
-  </p>
-  <br>
-  <button id="stop" disabled>Stop & Show Images</button>
-  <div id="images"></div>
+    <h1><a href="//webrtc.github.io/samples/" title="WebRTC samples homepage">WebRTC samples</a> <span>getUserMedia ⇒ canvas</span></h1>
+    <video playsinline autoplay style="width: 1280; height: 720;border:1px solid red;" ></video>    
+    <button>Take snapshot</button>
+    
+    <a id="download" download="image.png"><button type="button" onClick="download()">Download</button></a>
+    <br>
+<!--     <canvas style="position:absolute;border:0px solid;"></canvas> -->
+<!--      width="1200" height="600" -->
+    <canvas width="1280" height="720" style="position:absolute;border:0px solid;"></canvas>
 </div>
 
 <!-- <script src="js/main.js" async></script> -->
 <script async>
-    // check for support
-    if(typeof ImageCapture === 'undefined'){
-        const supportError = "ImageCapture is not supported by your browser";
-        const errorSpan = document.querySelector('span.error');
-        errorSpan.style = "color:red;font-size:larger;font-weight:bold";
-        errorSpan.innerText = supportError;
-        console.error(supportError);
+    'use strict';
+
+    // Put variables in global scope to make them available to the browser console.
+    const video = document.querySelector('video');
+    const canvas = window.canvas = document.querySelector('canvas');
+    
+    const button = document.querySelector('button');
+    button.onclick = function() {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      // canvas.width = 1280;
+      // canvas.height = 720;
+        // canvas.width = 230;
+        // canvas.height = 250;
+        // , canvas.width, canvas.height
+      canvas.getContext('2d').drawImage(video, 0, 0);
+    };
+    
+    const constraints = {
+      audio: false,
+      video: {
+        width: 1280,
+        height: 720,
+        facingMode: "environment"
+        // focusDistance: 10
+      }
+    };
+    
+    function handleSuccess(stream) {
+      window.stream = stream; // make stream available to browser console
+      video.srcObject = stream;
     }
-
-    const startBtn = document.querySelector('button#start');
-    const stopBtn = document.querySelector('button#stop');
-    const hideVid = document.querySelector('input#hideVid')
-    const intervalSec = document.querySelector('input#interval');
-    const videoElem = document.querySelector('video');
-    const imageCountSpan = document.querySelector('span#image_count');
-    const settingsSpan = document.querySelector('span#settings');
-    const capsSpan = document.querySelector('span#caps');
-    const imagesDiv = document.querySelector('div#images');
-    const storage = [];     // Use this array as our database
-    let stream, captureInterval;
-
-    hideVid.onclick = () => videoElem.hidden = hideVid.checked;
-
-
-    startBtn.onclick = async () => {
-        startBtn.disabled = true;
-
-        stream = await navigator.mediaDevices.getUserMedia({video: true});
-        videoElem.onplaying = () => console.log("video playing stream:", videoElem.srcObject);
-        videoElem.srcObject = stream;
-
-        const [track] = stream.getVideoTracks();
-        const imageCapture = new ImageCapture(track);
-        const photoCapabilities = await imageCapture.getPhotoCapabilities();
-        capsSpan.innerText = JSON.stringify(photoCapabilities);
-        console.log("Photo Capabilities: ", photoCapabilities);
-        const photoSettings = await imageCapture.getPhotoSettings();
-        settingsSpan.innerText = JSON.stringify(photoSettings);
-        console.log("Photo settings: ", photoSettings);
-
-        // (data check on the interval value) * that value is in seconds  * frame timestamps are in microseconds
-        const interval = (parseInt(intervalSec.value) >= 1 ? intervalSec.value * 1 : 1) * 1000;
-        captureInterval = setInterval(async () => {
-            const blob = await imageCapture.takePhoto()
-                .catch(err => console.error(err)); // It took a few seconds for me the camera to get ready
-
-            if(blob){
-                console.log(blob);
-                storage.push(blob);
-                imageCountSpan.innerText++;
-            }
-
-        }, interval);
-
-        stopBtn.disabled = false;
+    
+    function handleError(error) {
+      console.log('navigator.MediaDevices.getUserMedia error: ', error.message, error.name);
     }
+    
+    navigator.mediaDevices.getUserMedia(constraints).then(handleSuccess).catch(handleError);
 
-    stopBtn.onclick = () => {
-        // stop capture
-        clearInterval(captureInterval);
+    function download(){
+        var download = document.getElementById("download");
+        var image = document.querySelector('canvas').toDataURL("image/png")
+                    .replace("image/png", "image/octet-stream");
+        download.setAttribute("href", image);
 
-        // close the camera
-        stream.getTracks().forEach(track => track.stop());
-
-        // Display each image
-        function showImages() {
-            const blob = storage.shift();
-            const imageUrl = URL.createObjectURL(blob);
-            const imgElem = new Image();
-            imgElem.src = imageUrl;
-            imagesDiv.appendChild(imgElem);
-
-            if (storage.length > 0)
-                showImages();
-        }
-
-        console.log("stored images");
-        showImages();
     }
 </script>
 
