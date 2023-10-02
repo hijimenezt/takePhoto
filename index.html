@@ -18,14 +18,12 @@
 <body>
 <div id="container">
     <h1><a href="//webrtc.github.io/samples/" title="WebRTC samples homepage">WebRTC samples</a> <span>getUserMedia ⇒ canvas</span></h1>
-    <video playsinline autoplay style="width: 500px; height: 300px;border:1px solid red;" ></video>    
+    <video playsinline autoplay style="width: 1280; height: 720;border:1px solid red;" ></video>    
     <button>Take snapshot</button>
     <br>
 <!--     <canvas style="position:absolute;border:0px solid;"></canvas> -->
 <!--      width="1200" height="600" -->
     <canvas width="1280" height="720" style="position:absolute;border:0px solid;"></canvas>
-    <br>  
-    <canvas id="canvas2" width="500" height="600" style="position:absolute;border:1px solid green;margin-bottom:100px;"></canvas>
 </div>
 
 <!-- <script src="js/main.js" async></script> -->
@@ -35,26 +33,17 @@
     // Put variables in global scope to make them available to the browser console.
     const video = document.querySelector('video');
     const canvas = window.canvas = document.querySelector('canvas');
-    const canvas2 = window.canvas = document.getElementById('canvas2');
-    canvas.width = 230;
-    canvas.height = 250;
-
- 
     
     const button = document.querySelector('button');
     button.onclick = function() {
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-
-         canvas2.width = video.videoWidth;
-    canvas2.height = video.videoHeight;
       // canvas.width = 1280;
       // canvas.height = 720;
         // canvas.width = 230;
         // canvas.height = 250;
         // , canvas.width, canvas.height
       canvas.getContext('2d').drawImage(video, 0, 0);
-        canvas2.getContext('2d').drawImage(video, 0, 0);
     };
     
     const constraints = {
