@@ -39,12 +39,12 @@
     button.onclick = function() {
       // canvas.width = video.videoWidth;
       // canvas.height = video.videoHeight;
-      // canvas.width = 1280;
-      // canvas.height = 720;
-        canvas.width = 230;
-        canvas.height = 250;
+      canvas.width = 1280;
+      canvas.height = 720;
+        // canvas.width = 230;
+        // canvas.height = 250;
         // , canvas.width, canvas.height
-      canvas.getContext('2d').drawImage(video, 0, 0);
+      canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
     };
     
     const constraints = {
