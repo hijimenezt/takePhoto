@@ -14,58 +14,139 @@
     <link rel="icon" sizes="192x192" href="../../../images/webrtc-icon-192x192.png">
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700" rel="stylesheet" type="text/css">
     <link rel="stylesheet" href="../../../css/main.css">
+
+    <style>
+        .button-group, .play-area {
+          border: 1px solid grey;
+          padding: 1em 1%;
+          margin-bottom: 1em;
+        }
+        
+        .button {
+          padding: 0.5em;
+          margin-right: 1em;
+        }
+        
+        .play-area-sub {
+          width: 47%;
+          padding: 1em 1%;
+          display: inline-block;
+          text-align: center;
+        }
+        
+        #capture {
+          display: none;
+        }
+        
+        #snapshot {
+          display: inline-block;
+          width: 320px;
+          height: 240px;
+        }
+
+    </style>
 </head>
 <body>
-<div id="container">
-    <h1><a href="//webrtc.github.io/samples/" title="WebRTC samples homepage">WebRTC samples</a> <span>getUserMedia ⇒ canvas</span></h1>
-    <video playsinline autoplay style="width: 1280; height: 720;border:1px solid red;" ></video>    
-    <button>Take snapshot</button>
-    <br>
-<!--     <canvas style="position:absolute;border:0px solid;"></canvas> -->
-<!--      width="1200" height="600" -->
-    <canvas width="1280" height="720" style="position:absolute;border:0px solid;"></canvas>
+    <!-- The buttons to control the stream -->
+<div class="button-group">
+  <button id="btn-start" type="button" class="button">Start Streaming</button>
+  <button id="btn-stop" type="button" class="button">Stop Streaming</button>
+  <button id="btn-capture" type="button" class="button">Capture Image</button>
 </div>
 
-<!-- <script src="js/main.js" async></script> -->
+<!-- Video Element & Canvas -->
+<div class="play-area">
+  <div class="play-area-sub">
+    <h3>The Stream</h3>
+    <video id="stream" width="320" height="240"></video>
+  </div>
+  <div class="play-area-sub">
+    <h3>The Capture</h3>
+    <canvas id="capture" width="320" height="240"></canvas>
+    <div id="snapshot"></div>
+  </div>
+</div>
+    
 <script async>
-    'use strict';
+    // The buttons to start & stop stream and to capture the image
+var btnStart = document.getElementById( "btn-start" );
+var btnStop = document.getElementById( "btn-stop" );
+var btnCapture = document.getElementById( "btn-capture" );
 
-    // Put variables in global scope to make them available to the browser console.
-    const video = document.querySelector('video');
-    const canvas = window.canvas = document.querySelector('canvas');
-    
-    const button = document.querySelector('button');
-    button.onclick = function() {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      // canvas.width = 1280;
-      // canvas.height = 720;
-        // canvas.width = 230;
-        // canvas.height = 250;
-        // , canvas.width, canvas.height
-      canvas.getContext('2d').drawImage(video, 0, 0);
-    };
-    
-    const constraints = {
-      audio: false,
-      video: {
-        width: 1280,
-        height: 720,
-        facingMode: "environment"
-        // focusDistance: 10
-      }
-    };
-    
-    function handleSuccess(stream) {
-      window.stream = stream; // make stream available to browser console
-      video.srcObject = stream;
-    }
-    
-    function handleError(error) {
-      console.log('navigator.MediaDevices.getUserMedia error: ', error.message, error.name);
-    }
-    
-    navigator.mediaDevices.getUserMedia(constraints).then(handleSuccess).catch(handleError);
+// The stream & capture
+var stream = document.getElementById( "stream" );
+var capture = document.getElementById( "capture" );
+var snapshot = document.getElementById( "snapshot" );
+
+// The video stream
+var cameraStream = null;
+
+// Attach listeners
+btnStart.addEventListener( "click", startStreaming );
+btnStop.addEventListener( "click", stopStreaming );
+btnCapture.addEventListener( "click", captureSnapshot );
+
+// Start Streaming
+function startStreaming() {
+
+	var mediaSupport = 'mediaDevices' in navigator;
+
+	if( mediaSupport && null == cameraStream ) {
+
+		navigator.mediaDevices.getUserMedia( { video: true } )
+		.then( function( mediaStream ) {
+
+			cameraStream = mediaStream;
+
+			stream.srcObject = mediaStream;
+
+			stream.play();
+		})
+		.catch( function( err ) {
+
+			console.log( "Unable to access camera: " + err );
+		});
+	}
+	else {
+
+		alert( 'Your browser does not support media devices.' );
+
+		return;
+	}
+}
+
+// Stop Streaming
+function stopStreaming() {
+
+	if( null != cameraStream ) {
+
+		var track = cameraStream.getTracks()[ 0 ];
+
+		track.stop();
+		stream.load();
+
+		cameraStream = null;
+	}
+}
+
+function captureSnapshot() {
+
+	if( null != cameraStream ) {
+
+		var ctx = capture.getContext( '2d' );
+		var img = new Image();
+
+		ctx.drawImage( stream, 0, 0, capture.width, capture.height );
+	
+		img.src		= capture.toDataURL( "image/png" );
+		img.width	= 240;
+
+		snapshot.innerHTML = '';
+
+		snapshot.appendChild( img );
+	}
+}
+
 </script>
 
 </body>
