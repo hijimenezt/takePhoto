@@ -21,8 +21,9 @@
     <video playsinline autoplay style="width: 500px; height: 300px;border:1px solid red;" ></video>    
     <button>Take snapshot</button>
     <br>
-    <canvas style="position:absolute;border:0px solid;"></canvas>
+<!--     <canvas style="position:absolute;border:0px solid;"></canvas> -->
 <!--      width="1200" height="600" -->
+    <canvas width="1200" height="600" style="position:absolute;border:0px solid;"></canvas>
 </div>
 
 <!-- <script src="js/main.js" async></script> -->
@@ -44,7 +45,7 @@
         // canvas.width = 230;
         // canvas.height = 250;
         // , canvas.width, canvas.height
-      canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+      canvas.getContext('2d').drawImage(video, 0, 0);
     };
     
     const constraints = {
