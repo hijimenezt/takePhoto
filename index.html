@@ -14,139 +14,114 @@
     <link rel="icon" sizes="192x192" href="../../../images/webrtc-icon-192x192.png">
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700" rel="stylesheet" type="text/css">
     <link rel="stylesheet" href="../../../css/main.css">
-
-    <style>
-        .button-group, .play-area {
-          border: 1px solid grey;
-          padding: 1em 1%;
-          margin-bottom: 1em;
-        }
-        
-        .button {
-          padding: 0.5em;
-          margin-right: 1em;
-        }
-        
-        .play-area-sub {
-          width: 47%;
-          padding: 1em 1%;
-          display: inline-block;
-          text-align: center;
-        }
-        
-        #capture {
-          display: none;
-        }
-        
-        #snapshot {
-          display: inline-block;
-          width: 320px;
-          height: 240px;
-        }
-
-    </style>
 </head>
 <body>
-    <!-- The buttons to control the stream -->
-<div class="button-group">
-  <button id="btn-start" type="button" class="button">Start Streaming</button>
-  <button id="btn-stop" type="button" class="button">Stop Streaming</button>
-  <button id="btn-capture" type="button" class="button">Capture Image</button>
+<div id="container">
+  <span class="error"></span>
+  <br>
+  <label for="interval">Time between images in seconds: </label>
+  <input id="interval" type="text" value="1" min="1" pattern="\d+">
+  <br>
+  <button id="start">Start</button>
+  <br>
+  <label for="hideVid">Hide video element: </label>
+  <input id="hideVid" type="checkbox">
+  <br>
+  <p>Camera Settings</p>
+  <span id="settings"></span>
+  <p>Camera capabilities</p>
+  <span id="caps"></span>
+  <br>
+  <video autoplay muted playsinline></video>
+  <p>
+    Images captured: <span id="image_count">0</span>
+  </p>
+  <br>
+  <button id="stop" disabled>Stop & Show Images</button>
+  <div id="images"></div>
 </div>
 
-<!-- Video Element & Canvas -->
-<div class="play-area">
-  <div class="play-area-sub">
-    <h3>The Stream</h3>
-    <video id="stream" width="320" height="240"></video>
-  </div>
-  <div class="play-area-sub">
-    <h3>The Capture</h3>
-    <canvas id="capture" width="320" height="240"></canvas>
-    <div id="snapshot"></div>
-  </div>
-</div>
-    
+<!-- <script src="js/main.js" async></script> -->
 <script async>
-    // The buttons to start & stop stream and to capture the image
-var btnStart = document.getElementById( "btn-start" );
-var btnStop = document.getElementById( "btn-stop" );
-var btnCapture = document.getElementById( "btn-capture" );
+    // check for support
+    if(typeof ImageCapture === 'undefined'){
+        const supportError = "ImageCapture is not supported by your browser";
+        const errorSpan = document.querySelector('span.error');
+        errorSpan.style = "color:red;font-size:larger;font-weight:bold";
+        errorSpan.innerText = supportError;
+        console.error(supportError);
+    }
 
-// The stream & capture
-var stream = document.getElementById( "stream" );
-var capture = document.getElementById( "capture" );
-var snapshot = document.getElementById( "snapshot" );
+    const startBtn = document.querySelector('button#start');
+    const stopBtn = document.querySelector('button#stop');
+    const hideVid = document.querySelector('input#hideVid')
+    const intervalSec = document.querySelector('input#interval');
+    const videoElem = document.querySelector('video');
+    const imageCountSpan = document.querySelector('span#image_count');
+    const settingsSpan = document.querySelector('span#settings');
+    const capsSpan = document.querySelector('span#caps');
+    const imagesDiv = document.querySelector('div#images');
+    const storage = [];     // Use this array as our database
+    let stream, captureInterval;
 
-// The video stream
-var cameraStream = null;
+    hideVid.onclick = () => videoElem.hidden = hideVid.checked;
 
-// Attach listeners
-btnStart.addEventListener( "click", startStreaming );
-btnStop.addEventListener( "click", stopStreaming );
-btnCapture.addEventListener( "click", captureSnapshot );
 
-// Start Streaming
-function startStreaming() {
+    startBtn.onclick = async () => {
+        startBtn.disabled = true;
 
-	var mediaSupport = 'mediaDevices' in navigator;
+        stream = await navigator.mediaDevices.getUserMedia({video: true});
+        videoElem.onplaying = () => console.log("video playing stream:", videoElem.srcObject);
+        videoElem.srcObject = stream;
 
-	if( mediaSupport && null == cameraStream ) {
+        const [track] = stream.getVideoTracks();
+        const imageCapture = new ImageCapture(track);
+        const photoCapabilities = await imageCapture.getPhotoCapabilities();
+        capsSpan.innerText = JSON.stringify(photoCapabilities);
+        console.log("Photo Capabilities: ", photoCapabilities);
+        const photoSettings = await imageCapture.getPhotoSettings();
+        settingsSpan.innerText = JSON.stringify(photoSettings);
+        console.log("Photo settings: ", photoSettings);
 
-		navigator.mediaDevices.getUserMedia( { video: true } )
-		.then( function( mediaStream ) {
+        // (data check on the interval value) * that value is in seconds  * frame timestamps are in microseconds
+        const interval = (parseInt(intervalSec.value) >= 1 ? intervalSec.value * 1 : 1) * 1000;
+        captureInterval = setInterval(async () => {
+            const blob = await imageCapture.takePhoto()
+                .catch(err => console.error(err)); // It took a few seconds for me the camera to get ready
 
-			cameraStream = mediaStream;
+            if(blob){
+                console.log(blob);
+                storage.push(blob);
+                imageCountSpan.innerText++;
+            }
 
-			stream.srcObject = mediaStream;
+        }, interval);
 
-			stream.play();
-		})
-		.catch( function( err ) {
+        stopBtn.disabled = false;
+    }
 
-			console.log( "Unable to access camera: " + err );
-		});
-	}
-	else {
+    stopBtn.onclick = () => {
+        // stop capture
+        clearInterval(captureInterval);
 
-		alert( 'Your browser does not support media devices.' );
+        // close the camera
+        stream.getTracks().forEach(track => track.stop());
 
-		return;
-	}
-}
+        // Display each image
+        function showImages() {
+            const blob = storage.shift();
+            const imageUrl = URL.createObjectURL(blob);
+            const imgElem = new Image();
+            imgElem.src = imageUrl;
+            imagesDiv.appendChild(imgElem);
 
-// Stop Streaming
-function stopStreaming() {
+            if (storage.length > 0)
+                showImages();
+        }
 
-	if( null != cameraStream ) {
-
-		var track = cameraStream.getTracks()[ 0 ];
-
-		track.stop();
-		stream.load();
-
-		cameraStream = null;
-	}
-}
-
-function captureSnapshot() {
-
-	if( null != cameraStream ) {
-
-		var ctx = capture.getContext( '2d' );
-		var img = new Image();
-
-		ctx.drawImage( stream, 0, 0, capture.width, capture.height );
-	
-		img.src		= capture.toDataURL( "image/png" );
-		img.width	= 240;
-
-		snapshot.innerHTML = '';
-
-		snapshot.appendChild( img );
-	}
-}
-
+        console.log("stored images");
+        showImages();
+    }
 </script>
 
 </body>
